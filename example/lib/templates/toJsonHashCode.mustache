@@ -1,0 +1,14 @@
+    {{# fields }}
+      other.{{ name }} == {{ name }} {{^ms-last}} && {{/ms-last}}
+    {{/ fields }};
+
+  @override
+  int get hashCode => Object.hashAll([{{# fields }} {{ name }}, {{/ fields }}]) ;
+
+  Map<String, Object?> toJson() {
+    return {
+{{# fields }}
+  '{{ name }}': {{ name }},
+{{/ fields }}
+    };
+  }

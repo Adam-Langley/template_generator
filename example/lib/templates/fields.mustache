@@ -78,20 +78,7 @@ class {{name}}Partial {
 
   @override
   operator ==(Object? other) => other is {{name}}Partial && 
-    {{# fields }}
-      other.{{ name }} == {{ name }} {{^ms-last}} && {{/ms-last}}
-    {{/ fields }};
-
-  @override
-  int get hashCode => Object.hashAll([{{# fields }} {{ name }}, {{/ fields }}]) ;
-
-  Map<String, Object?> toJson() {
-    return {
-{{# fields }}
-  '{{ name }}': {{ name }},
-{{/ fields }}
-    };
-  }
+{{> lib-templates-toJsonHashCode}}
 
   @override
   String toString() {
@@ -178,20 +165,7 @@ class {{name}}Mutable {
 
   @override
   operator ==(Object? other) => other is {{name}}Mutable && 
-    {{# fields }}
-      other.{{ name }} == {{ name }} {{^ms-last}} && {{/ms-last}}
-    {{/ fields }};
-
-  @override
-  int get hashCode => Object.hashAll([{{# fields }} {{ name }}, {{/ fields }}]) ;
-
-  Map<String, Object?> toJson() {
-    return {
-{{# fields }}
-  '{{ name }}': {{ name }},
-{{/ fields }}
-    };
-  }
+{{> lib-templates-toJsonHashCode}}
 
   @override
   String toString() {
