@@ -125,7 +125,7 @@ Map<String, Object?> getElementTemplateValues(Element e) {
     return {
       'name': e.name,
       'metadata': getAnnotationsTemplateValues(e.metadata),
-      'documentationComment': e.documentationComment,
+      'docs': getDocumentationTemplateValues(e),
       'methods': e.methods.mapMs(getElementTemplateValues).toList(),
       'fields': e.fields.mapMs(getElementTemplateValues).toList(),
       'typeParameters':
@@ -143,6 +143,7 @@ Map<String, Object?> getElementTemplateValues(Element e) {
     return {
       ...getExecutableElementTemplateValues(e),
       'isDefaultConstructor': e.isDefaultConstructor,
+      'isUnnamed': e.name.isEmpty,
       'isFactory': e.isFactory,
       'isGenerative': e.isGenerative,
       'redirectedConstructor': e.redirectedConstructor?.name,
@@ -156,7 +157,7 @@ Map<String, Object?> getElementTemplateValues(Element e) {
       'name': e.name,
       ...getDartTypeTemplateValues(e.type),
       'metadata': getAnnotationsTemplateValues(e.metadata),
-      'documentationComment': e.documentationComment,
+      'docs': getDocumentationTemplateValues(e),
       'isAbstract': e.isAbstract,
       'isStatic': e.isStatic,
       'isFinal': e.isFinal,
@@ -169,7 +170,7 @@ Map<String, Object?> getElementTemplateValues(Element e) {
       'name': e.name,
       ...getDartTypeTemplateValues(e.type),
       'metadata': getAnnotationsTemplateValues(e.metadata),
-      'documentationComment': e.documentationComment,
+      'docs': getDocumentationTemplateValues(e),
       'defaultValueCode': e.defaultValueCode,
       'isNamed': e.isNamed,
       'isOptional': e.isOptional,
@@ -191,10 +192,11 @@ Map<String, Object?> getExecutableElementTemplateValues(ExecutableElement e) {
     ...getDartTypeTemplateValues(e.type),
     ...getDartTypeTemplateValues(e.returnType, typeKey: 'returnType'),
     'metadata': getAnnotationsTemplateValues(e.metadata),
-    'documentationComment': e.documentationComment,
+    'docs': getDocumentationTemplateValues(e),
     'isAbstract': e.isAbstract,
     'isStatic': e.isStatic,
     'parameters': e.parameters.mapMs(getElementTemplateValues).toList(),
+    'hasParameters': e.parameters.isNotEmpty,
     'typeParameters': e.typeParameters.mapMs(getElementTemplateValues).toList(),
     'isPrivate': e.isPrivate,
     'isPublic': e.isPublic,
@@ -215,6 +217,19 @@ List<Map<String, Object?>> getAnnotationsTemplateValues(
       }
     };
   }).toList();
+}
+
+Map<String, Object?> getDocumentationTemplateValues(Element e) {
+  final cleanComment =
+      (e.documentationComment ?? '').replaceAll(RegExp(r'/// ?'), '');
+  return {
+    'comment': e.documentationComment,
+    'hasComment': e.documentationComment != null,
+    'cleanComment': cleanComment,
+    'oneLineComment': cleanComment.replaceAll(RegExp(r'\n'), ' '),
+    // TODO: support code ``` sections
+    'lineBreakComment': cleanComment.replaceAll(RegExp(r'\n'), '<br/>'),
+  };
 }
 
 Map<String, Object?> getInterfaceTypeTemplateValues(

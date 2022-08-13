@@ -1,6 +1,34 @@
 import 'package:mustache_generator_example/mustache_generator_example.dart';
-
 import 'package:mobx/mobx.dart';
+
+const markdownDocsModel = '''
+# Model
+The model
+
+## Constructors
+The constructors for Model
+
+### Unnamed
+
+
+#### Parameters
+| Parameter | Type | Description | Default | Required |
+| ---- | ---- | --- | --- | --- |
+  |name|`String?`|NA||false|
+  |value|`int`|NA||true|
+  |items|`List<String>?`|NA|const ['default']|false|
+  |itemsNotNull|`List<int?>`|NA||true|
+
+## Fields
+The fields you will find in Model
+
+| Name | Type | Description | Final |
+| ---- | ---- | --- | --- |
+  |name|`String?`|NA|true|
+  |value|`int`|Documentation for value<br/>non-null integer|true|
+  |items|`List<String>?`|A list of items|true|
+  |itemsNotNull|`List<int?>`|NA|true|
+''';
 
 enum ModelFields {
   name,
@@ -35,6 +63,7 @@ class ModelPartial {
   int? value;
   bool get valueIsSet => value != null;
 
+  /// A list of items
   List<String>? _items;
   List<String>? get items => _items;
   set items(List<String>? value) {
@@ -141,6 +170,7 @@ class ModelMutable {
   int get value => valueObservable.value;
   set value(int value) => valueObservable.value = value;
 
+  /// A list of items
   final Observable<ObservableList<String>?> itemsObservable;
   ObservableList<String>? get items => itemsObservable.value;
   set items(List<String>? value) =>
@@ -235,3 +265,22 @@ class ModelMutable {
 extension ModelMutableExt on Model {
   ModelMutable toMutable() => ModelMutable.fromValue(this);
 }
+
+const markdownDocsOtherModel = '''
+# OtherModel
+
+
+## Constructors
+The constructors for OtherModel
+
+### Unnamed
+
+
+
+## Fields
+The fields you will find in OtherModel
+
+| Name | Type | Description | Final |
+| ---- | ---- | --- | --- |
+  |t|`int?`|Documentation for [t]|false|
+''';

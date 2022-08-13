@@ -1,0 +1,30 @@
+const markdownDocs{{name}} = '''
+# {{name}}
+{{docs.cleanComment}}
+
+## Constructors
+The constructors for {{name}}
+
+{{#constructors}}
+### {{name}}{{#isUnnamed}}Unnamed{{/isUnnamed}}
+{{docs.cleanComment}}
+
+{{#hasParameters}}
+#### Parameters
+| Parameter | Type | Description | Default | Required |
+| ---- | ---- | --- | --- | --- |
+{{/hasParameters}}
+{{#parameters}}
+  |{{name}}|`{{type}}`|{{docs.lineBreakComment}}{{^docs.hasComment}}NA{{/docs.hasComment}}|{{defaultValueCode}}|{{isRequired}}|
+{{/parameters}}
+{{/constructors}}
+
+## Fields
+The fields you will find in {{name}}
+
+| Name | Type | Description | Final |
+| ---- | ---- | --- | --- |
+{{#fields}}
+  |{{name}}|`{{type}}`|{{docs.lineBreakComment}}{{^docs.hasComment}}NA{{/docs.hasComment}}|{{isFinal}}|
+{{/fields}}
+''';

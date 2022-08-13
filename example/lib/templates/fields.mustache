@@ -19,7 +19,7 @@ class {{name}}Partial {
   ;
 
 {{# fields }}
-  {{ documentationComment }}
+  {{ docs.comment }}
   {{# typeIsNullable }}
     {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} _{{ name }};
     {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} get {{ name }} => _{{ name }};
@@ -98,7 +98,7 @@ class {{name}}Mutable {
   });
 
 {{# fields }}
-  {{ documentationComment }}
+  {{ docs.comment }}
   {{# typeCore.isList }}
     final Observable<ObservableList<{{typeCore.listGeneric.type}}>{{#typeIsNullable}}?{{/typeIsNullable}}> 
       {{ name }}Observable;
