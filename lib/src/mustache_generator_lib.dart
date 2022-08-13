@@ -96,18 +96,35 @@ ${allDecorators.map((e) {
     // allElements.removeWhere((e) => _name(e).startsWith('_'));
 
     try {
-      // final outputAsset =
-      //     AssetId(buildStep.inputId.package, 'lib/global.validations.dart');
+      final List<String> templateImports = [];
+      final templateStrings = allElements.entries.expand((entry) {
+        final element = entry.key;
+        return entry.value.expand(
+          (template) {
+            final lines = template
+                .renderString(getElementTemplateValues(element))
+                .split(RegExp('\n'));
+            int i = 0;
+            while (i < lines.length) {
+              final line = lines[i];
+              if (RegExp('^import [\'"][^\'"]+[\'"];\$').hasMatch(line)) {
+                templateImports.add(line);
+                lines[i] = '';
+              } else {
+                break;
+              }
+              i++;
+            }
 
-// const allNames = [${allElements.map((e) => '"${e.displayName}",').join()}];
-      String out = '''
-${allElements.map((e) => "import '${e.source!.uri}';").toSet().join()}
-
-${templates.values.expand((template) {
-        return allElements.map(
-          (e) => template.renderString(getElementTemplateValues(e)),
+            return lines..add('\n');
+          },
         );
-      }).join('\n\n')}
+      }).join('\n');
+
+      String out = '''
+${allElements.keys.map((e) => "import '${e.source!.uri}';").followedBy(templateImports).toSet().join()}
+
+$templateStrings
 ''';
       try {
         out = DartFormatter().format(out);
