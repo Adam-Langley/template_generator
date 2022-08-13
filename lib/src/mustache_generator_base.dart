@@ -1,0 +1,3 @@
+class Mustache {
+  const Mustache();
+}
