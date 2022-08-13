@@ -1,6 +1,8 @@
-import 'package:mustache_generator/mustache_generator.dart';
+import 'templates_decorators.dart';
 
-@Mustache()
+/// The model
+@DocsTemplate()
+@FieldsTemplate()
 class Model {
   final String? name;
 
@@ -8,6 +10,7 @@ class Model {
   /// non-null integer
   final int value;
 
+  /// A list of items
   final List<String>? items;
 
   final List<int?> itemsNotNull;
@@ -15,7 +18,13 @@ class Model {
   Model({
     this.name,
     required this.value,
-    this.items,
+    this.items = const ['default'],
     required this.itemsNotNull,
   });
+}
+
+@DocsTemplate()
+class OtherModel {
+  /// Documentation for [t]
+  int? t;
 }

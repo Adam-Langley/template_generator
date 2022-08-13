@@ -22,14 +22,11 @@ Generate files from Dart code annotations and [Mustache](http://mustache.github.
 Install dependencies:
 
 ```yaml
-dependencies:
-  # TODO: import the decorator from another package or 
+dev_dependencies:
+  build_runner:
   mustache_generator:
     git:
       url: https://github.com/juancastillo0/template_generator
-
-dev_dependencies:
-  build_runner:
 ```
 
 ## Usage

@@ -21,7 +21,7 @@ class MustacheLibGenerator implements Builder {
   @override
   Map<String, List<String>> get buildExtensions {
     return const {
-      r'$lib$': ['templates_output.dart']
+      r'$lib$': ['templates_output.dart', 'templates_decorators.dart'],
     };
   }
 
@@ -48,6 +48,27 @@ class MustacheLibGenerator implements Builder {
       );
       templates[input.path] = template;
     }
+
+    final List<MapEntry<String, Template>> allDecorators =
+        templates.entries.map((e) {
+      String name = e.key.split('/').last;
+      name = '${name.substring(0, 1).toUpperCase()}'
+          '${name.substring(1)}Template';
+      return MapEntry(name, e.value);
+    }).toList();
+
+    await buildStep.writeAsString(
+      AssetId(
+        buildStep.inputId.package,
+        'lib${Platform.pathSeparator}templates_decorators.dart',
+      ),
+      '''
+${allDecorators.map((e) {
+        final name = e.key;
+        return 'class $name { const $name(); }';
+      }).join('\n')}
+''',
+    );
 
     await for (final input in buildStep.findAssets(Glob('lib/**.dart'))) {
       try {
