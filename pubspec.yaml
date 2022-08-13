@@ -1,7 +1,7 @@
 name: mustache_generator
 description: Generate files from Dart code annotations and Mustache templates
 version: 0.0.1
-# homepage: https://www.example.com
+homepage: https://github.com/juancastillo0/template_generator
 
 environment:
   sdk: ">=2.17.6 <3.0.0"

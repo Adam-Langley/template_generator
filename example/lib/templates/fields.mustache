@@ -1,0 +1,204 @@
+import 'package:mobx/mobx.dart';
+
+enum {{name}}Fields {
+{{# fields }}
+  {{ name }},
+{{/ fields }}
+}
+
+class {{name}}Partial {
+  {{name}}Partial({
+{{# fields }}
+  {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} {{ name }},
+{{/ fields }}
+  }): 
+{{# fields }}
+  {{# typeIsNullable }}_{{/ typeIsNullable }}{{ name }} = {{ name }}
+  {{^ ms-last }},{{/ ms-last }}
+{{/ fields }}
+  ;
+
+{{# fields }}
+  {{ documentationComment }}
+  {{# typeIsNullable }}
+    {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} _{{ name }};
+    {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} get {{ name }} => _{{ name }};
+    set {{ name }}({{type}}{{^typeIsNullable}}?{{/typeIsNullable}} value) {
+      _{{ name }} = value;
+      _{{ name }}IsSet = true;
+    }
+    bool _{{ name }}IsSet = false;
+    bool get {{ name }}IsSet => _{{ name }}IsSet || {{ name }} != null;
+  {{/ typeIsNullable }}
+  {{^ typeIsNullable }}
+    {{type}}{{^typeIsNullable}}?{{/typeIsNullable}} {{ name }};
+    bool get {{ name }}IsSet => {{ name }} != null;
+  {{/ typeIsNullable }}
+{{/ fields }}
+
+  {{name}}Partial.fromValue({{name}} value): 
+    {{# fields }}
+      {{# typeIsNullable }}_{{/ typeIsNullable }}{{ name }} = value.{{ name }} {{^ms-last}}, {{/ms-last}}
+    {{/ fields }};
+
+  {{name}}Partial.fromJson(Map<String, Object?> json): 
+    {{# fields }}
+      {{# typeIsNullable }}_{{/ typeIsNullable }}{{ name }} 
+          = json['{{ name }}'] as {{type}}{{^typeIsNullable}}?{{/typeIsNullable}}
+      {{^ms-last}}, {{/ms-last}}
+    {{/ fields }};
+
+  {{name}}Partial clone() {
+    return {{name}}Partial()..merge(this);
+  }
+
+  void merge({{name}}Partial other) {
+    {{# fields }}
+    if (other.{{ name }}IsSet) {{ name }} = other.{{ name }};
+    {{/ fields }}
+  }
+
+  bool get isValidValue {
+    {{# fields }}
+      {{^typeIsNullable}}
+    if ({{ name }} is! {{ type }}) return false;
+      {{/typeIsNullable}}
+    {{/ fields }}
+    return true;
+  }
+
+  {{name}}? tryToValue() {
+    if (!isValidValue) return null;
+    return {{name}}(
+  {{# fields }}
+    {{ name }}: {{ name }}{{^typeIsNullable}} as {{ type }} {{/typeIsNullable}},
+  {{/ fields }}
+    );
+  }
+
+  @override
+  operator ==(Object? other) => other is {{name}}Partial && 
+    {{# fields }}
+      other.{{ name }} == {{ name }} {{^ms-last}} && {{/ms-last}}
+    {{/ fields }};
+
+  @override
+  int get hashCode => Object.hashAll([{{# fields }} {{ name }}, {{/ fields }}]) ;
+
+  Map<String, Object?> toJson() {
+    return {
+{{# fields }}
+  '{{ name }}': {{ name }},
+{{/ fields }}
+    };
+  }
+
+  @override
+  String toString() {
+    return '{{name}}Partial${toJson()}';
+  }
+}
+
+extension {{name}}PartialExt on {{name}} {
+  {{name}}Partial toPartial() => {{name}}Partial.fromValue(this);
+}
+
+class {{name}}Mutable {
+  {{name}}Mutable({
+{{# fields }}
+ required this.{{ name }}Observable,
+{{/ fields }}
+  });
+
+{{# fields }}
+  {{ documentationComment }}
+  {{# typeCore.isList }}
+    final Observable<ObservableList<{{typeCore.listGeneric.type}}>{{#typeIsNullable}}?{{/typeIsNullable}}> 
+      {{ name }}Observable;
+    ObservableList<{{typeCore.listGeneric.type}}>{{#typeIsNullable}}?{{/typeIsNullable}}
+      get {{ name }} => {{ name }}Observable.value;
+    set {{ name }}({{type}} value) => {{ name }}Observable.value = 
+      {{#typeIsNullable}} value == null ? null : ObservableList.of(value) {{/typeIsNullable}}
+      {{^typeIsNullable}} ObservableList.of(value) {{/typeIsNullable}};
+  {{/ typeCore.isList }}
+  {{# typeCore.isSet }}final ObservableSet<{{typeCore.setGeneric.type}}> {{ name }}; {{/ typeCore.isSet }}
+  {{# typeCore.isMap }}final ObservableMap<{{typeCore.mapKeyGeneric.type}},{{typeCore.mapValueGeneric.type}}> {{ name }}; {{/ typeCore.isMap }}
+  {{^ typeCore.isCollection }}
+    final Observable<{{type}}> {{ name }}Observable;
+    {{type}} get {{ name }} => {{ name }}Observable.value;
+    set {{ name }}({{type}} value) => {{ name }}Observable.value = value;
+  {{/ typeCore.isCollection }}
+{{/ fields }}
+
+  {{name}}Mutable.fromValue({{name}} value): 
+    {{# fields }}
+  {{# typeCore.isList }} {{ name }}Observable = Observable(
+      {{#typeIsNullable}} value.{{ name }} == null ? null : ObservableList.of(value.{{ name }}!) {{/typeIsNullable}}
+      {{^typeIsNullable}} ObservableList.of(value.{{ name }}) {{/typeIsNullable}})
+  {{/ typeCore.isList }}
+  {{# typeCore.isSet }} {{ name }} = ObservableSet.of(value.{{ name }}) {{/ typeCore.isSet }}
+  {{# typeCore.isMap }} {{ name }} = ObservableMap.of(value.{{ name }}) {{/ typeCore.isMap }}
+  {{^ typeCore.isCollection }} {{ name }}Observable = Observable(value.{{ name }}) {{/ typeCore.isCollection }}
+   {{^ms-last}}, {{/ms-last}}
+    {{/ fields }};
+
+  {{name}}Mutable.fromJson(Map<String, Object?> json): 
+    {{# fields }}
+  {{# typeCore.isList }} {{ name }}Observable = Observable(
+      {{#typeIsNullable}} json['{{ name }}'] == null ? null : ObservableList.of((json['{{ name }}'] as List<dynamic>).cast()) {{/typeIsNullable}}
+      {{^typeIsNullable}} ObservableList.of((json['{{ name }}'] as List<dynamic>).cast()) {{/typeIsNullable}})
+    {{/ typeCore.isList }}
+  {{# typeCore.isSet }} {{ name }} = ObservableSet.of((json['{{ name }}'] as Iterable<dynamic>).toSet().cast()) {{/ typeCore.isSet }}
+  {{# typeCore.isMap }} {{ name }} = ObservableMap.of((json['{{ name }}'] as Map<String, dynamic>).cast()) {{/ typeCore.isMap }}
+  {{^ typeCore.isCollection }} {{ name }}Observable = Observable(json['{{ name }}'] as {{ type }}) {{/ typeCore.isCollection }}
+  {{^ms-last}}, {{/ms-last}} 
+    {{/ fields }};
+
+  void mergePartial({{name}}Partial other) {
+    runInAction(() {
+    {{# fields }}
+    if (other.{{ name }}IsSet) {
+      {{ name }} = other.{{ name }}{{^typeIsNullable}} as {{type}}{{/typeIsNullable}};
+    }
+    {{/ fields }}
+    });
+  }
+
+  {{name}} toValue() {
+    return {{name}}(
+  {{# fields }}
+    {{ name }}: {{ name }},
+  {{/ fields }}
+    );
+  }
+
+  late final List<Observable<Object?>> allObservables = [
+    {{# fields }} {{ name }}Observable, {{/ fields }}
+  ];
+
+  @override
+  operator ==(Object? other) => other is {{name}}Mutable && 
+    {{# fields }}
+      other.{{ name }} == {{ name }} {{^ms-last}} && {{/ms-last}}
+    {{/ fields }};
+
+  @override
+  int get hashCode => Object.hashAll([{{# fields }} {{ name }}, {{/ fields }}]) ;
+
+  Map<String, Object?> toJson() {
+    return {
+{{# fields }}
+  '{{ name }}': {{ name }},
+{{/ fields }}
+    };
+  }
+
+  @override
+  String toString() {
+    return '{{name}}Mutable${toJson()}';
+  }
+}
+
+extension {{name}}MutableExt on {{name}} {
+  {{name}}Mutable toMutable() => {{name}}Mutable.fromValue(this);
+}
