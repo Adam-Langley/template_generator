@@ -11,8 +11,6 @@ import 'package:glob/glob.dart';
 import 'package:mustache_template/mustache.dart';
 import 'package:source_gen/source_gen.dart';
 
-import 'mustache_generator_base.dart';
-
 class MustacheLibGenerator implements Builder {
   final BuilderOptions options;
 
@@ -34,8 +32,7 @@ class MustacheLibGenerator implements Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
-    final allElements = <Element>[];
-
+    final Map<Element, List<Template>> allElements = {};
     final Map<String, Template> templates = {};
 
     await for (final input in buildStep.findAssets(Glob('lib/**.mustache'))) {
@@ -44,9 +41,14 @@ class MustacheLibGenerator implements Builder {
         source,
         name: input.path,
         htmlEscapeValues: false,
-        partialResolver: (name) => templates[name],
+        partialResolver: (name) {
+          final key = name.replaceAll('-', '/');
+          return templates[key];
+        },
       );
-      templates[input.path] = template;
+      final key =
+          input.path.substring(0, input.path.length - '.mustache'.length);
+      templates[key] = template;
     }
 
     final List<MapEntry<String, Template>> allDecorators =
@@ -73,27 +75,22 @@ ${allDecorators.map((e) {
     await for (final input in buildStep.findAssets(Glob('lib/**.dart'))) {
       try {
         final library = await buildStep.resolver.libraryFor(input);
+        // for (final element in library.topLevelElements) {
+        //   element.visitChildren(const _WarningElementVisitor());
+        // }
 
         final reader = LibraryReader(library);
-        for (final element in library.topLevelElements) {
-          element.visitChildren(const _WarningElementVisitor());
-        }
-        final classesInLibrary = reader.classes;
-        final functionsInLibrary =
-            reader.allElements.whereType<FunctionElement>();
 
-        allElements.addAll(
-          classesInLibrary.where(
-            (element) => const TypeChecker.fromRuntime(Mustache)
-                .hasAnnotationOfExact(element),
-          ),
-        );
-        allElements.addAll(
-          functionsInLibrary.where(
-            (element) => const TypeChecker.fromRuntime(Mustache)
-                .hasAnnotationOfExact(element),
-          ),
-        );
+        for (final element in reader.allElements) {
+          for (final dec in allDecorators) {
+            final checker = TypeChecker.fromUrl(
+              'package:${buildStep.inputId.package}/templates_decorators.dart#${dec.key}',
+            );
+            if (checker.hasAnnotationOf(element)) {
+              allElements.putIfAbsent(element, () => []).add(dec.value);
+            }
+          }
+        }
       } catch (_) {}
     }
     // allElements.removeWhere((e) => _name(e).startsWith('_'));

@@ -1,3 +1,0 @@
-class Mustache {
-  const Mustache();
-}
