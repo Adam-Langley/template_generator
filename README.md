@@ -31,26 +31,26 @@ dev_dependencies:
 
 ## Usage
 
-Create and annotate your model:
-
-```dart
-@Mustache()
-class Model {
-  final String fieldName;
-
-  const Model({
-    required this.fieldName,
-  });
-}
-```
-
-Create a Mustache template within the `lib` directory:
+Create a Mustache template within the `lib` directory (`lib/templates/fieldsEnum.mustache`):
 
 ```mustache
 enum {{name}}Fields {
 {{# fields }}
   {{ name }},
 {{/ fields }}
+}
+```
+
+Create and annotate your model:
+
+```dart
+@FieldsEnumTemplate()
+class Model {
+  final String fieldName;
+
+  const Model({
+    required this.fieldName,
+  });
 }
 ```
 
