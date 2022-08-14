@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -10,6 +11,7 @@ import 'package:dart_style/dart_style.dart';
 import 'package:glob/glob.dart';
 import 'package:mustache_template/mustache.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:yaml/yaml.dart';
 
 class MustacheLibGenerator implements Builder {
   final BuilderOptions options;
@@ -32,8 +34,9 @@ class MustacheLibGenerator implements Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
-    final Map<Element, List<Template>> allElements = {};
-    final Map<String, Template> templates = {};
+    final Map<Element, List<MapEntry<DartObject, TemplateConfig>>> allElements =
+        {};
+    final Map<String, TemplateConfig> templates = {};
 
     await for (final input in buildStep.findAssets(Glob('lib/**.mustache'))) {
       final source = await buildStep.readAsString(input);
@@ -43,33 +46,39 @@ class MustacheLibGenerator implements Builder {
         htmlEscapeValues: false,
         partialResolver: (name) {
           final key = name.replaceAll('-', '/');
-          return templates[key];
+          return templates[key]?.template;
         },
       );
       final key =
           input.path.substring(0, input.path.length - '.mustache'.length);
-      templates[key] = template;
+      templates[key] = TemplateConfig.fromTemplate(key, template);
     }
-
-    final List<MapEntry<String, Template>> allDecorators =
-        templates.entries.map((e) {
-      String name = e.key.split('/').last;
-      name = '${name.substring(0, 1).toUpperCase()}'
-          '${name.substring(1)}Template';
-      return MapEntry(name, e.value);
-    }).toList();
 
     await buildStep.writeAsString(
       AssetId(
         buildStep.inputId.package,
         'lib${Platform.pathSeparator}templates_decorators.dart',
       ),
-      '''
-${allDecorators.map((e) {
-        final name = e.key;
-        return 'class $name { const $name(); }';
+      DartFormatter().format('''
+${templates.values.map((e) {
+        final name = e.name;
+        final params = e.parameters.entries.map(
+          (e) {
+            final defaultValue = e.value.defaultValue;
+            final setDefault = defaultValue == null ? '' : ' = $defaultValue';
+            final req =
+                !e.value.type.endsWith('?') && e.value.defaultValue == null;
+            return '${req ? 'required ' : ''}this.${e.key}$setDefault,';
+          },
+        ).join();
+
+        return '''
+class $name {
+  const $name(${e.parameters.isEmpty ? '' : '{$params}'});
+${e.parameters.entries.map((e) => '\n\tfinal ${e.value.type} ${e.key};').join()}
+}''';
       }).join('\n')}
-''',
+'''),
     );
 
     await for (final input in buildStep.findAssets(Glob('lib/**.dart'))) {
@@ -82,27 +91,36 @@ ${allDecorators.map((e) {
         final reader = LibraryReader(library);
 
         for (final element in reader.allElements) {
-          for (final dec in allDecorators) {
+          for (final dec in templates.values) {
             final checker = TypeChecker.fromUrl(
-              'package:${buildStep.inputId.package}/templates_decorators.dart#${dec.key}',
+              'package:${buildStep.inputId.package}/templates_decorators.dart#${dec.name}',
             );
-            if (checker.hasAnnotationOf(element)) {
-              allElements.putIfAbsent(element, () => []).add(dec.value);
+            final annotation = checker.firstAnnotationOf(element);
+            if (annotation != null) {
+              allElements
+                  .putIfAbsent(element, () => [])
+                  .add(MapEntry(annotation, dec));
             }
           }
         }
       } catch (_) {}
     }
-    // allElements.removeWhere((e) => _name(e).startsWith('_'));
 
     try {
       final List<String> templateImports = [];
       final templateStrings = allElements.entries.expand((entry) {
         final element = entry.key;
         return entry.value.expand(
-          (template) {
-            final lines = template
-                .renderString(getElementTemplateValues(element))
+          (e) {
+            final templateConfig = e.value;
+            final values = getElementTemplateValues(element);
+            for (final param in templateConfig.parameters.entries) {
+              final value = e.key.getField(param.key);
+              values[param.key] =
+                  value == null ? null : getDartObjectValue(value);
+            }
+            final lines = templateConfig.template
+                .renderString(values)
                 .split(RegExp('\n'));
             int i = 0;
             while (i < lines.length) {
@@ -137,6 +155,22 @@ $templateStrings
   }
 }
 
+Object? getDartObjectValue(DartObject object) {
+  return object.toBoolValue() ??
+      object.toDoubleValue() ??
+      object.toFunctionValue() ??
+      object.toIntValue() ??
+      object.toListValue()?.map(getDartObjectValue).toList() ??
+      object.toMapValue()?.map((key, value) => MapEntry(
+            value == null ? null : getDartObjectValue(value),
+            value == null ? null : getDartObjectValue(value),
+          )) ??
+      object.toSetValue()?.map(getDartObjectValue).toList() ??
+      object.toStringValue() ??
+      object.toSymbolValue() ??
+      object.toTypeValue()?.getDisplayString(withNullability: true);
+}
+
 Map<String, Object?> getElementTemplateValues(Element e) {
   if (e is ClassElement) {
     return {
@@ -163,6 +197,7 @@ Map<String, Object?> getElementTemplateValues(Element e) {
       'isUnnamed': e.name.isEmpty,
       'isFactory': e.isFactory,
       'isGenerative': e.isGenerative,
+      'isSynthetic': e.isSynthetic,
       'redirectedConstructor': e.redirectedConstructor?.name,
       'isConst': e.isConst,
     };
@@ -331,6 +366,59 @@ extension CollectionExtension<T> on Iterable<T> {
       value['ms-index'] = i++;
       return value;
     });
+  }
+}
+
+class TemplateConfig {
+  final Template template;
+  final String name;
+  final String path;
+  final Map<String, TemplateArgument> parameters;
+
+  TemplateConfig({
+    required this.template,
+    required this.name,
+    required this.path,
+    required this.parameters,
+  });
+
+  static final templateConfigRegExp = RegExp(r'^{{!([\s\S]*?)(?=\n}})');
+
+  factory TemplateConfig.fromTemplate(String path, Template template) {
+    final match = templateConfigRegExp.firstMatch(template.source);
+    final jsonConfig = loadYaml(match?.group(1) ?? '{}') as Map;
+
+    String? name = jsonConfig['name'] as String?;
+    if (name == null) {
+      name = path.split('/').last;
+      name = '${name.substring(0, 1).toUpperCase()}'
+          '${name.substring(1)}Template';
+    }
+
+    return TemplateConfig(
+      template: template,
+      name: name,
+      path: path,
+      parameters: (jsonConfig['parameters'] as Map? ?? {})
+          .map((key, value) => MapEntry(key, TemplateArgument.fromJson(value))),
+    );
+  }
+}
+
+class TemplateArgument {
+  final String type;
+  final String? defaultValue;
+
+  TemplateArgument({
+    required this.type,
+    this.defaultValue,
+  });
+
+  factory TemplateArgument.fromJson(Map<dynamic, dynamic> map) {
+    return TemplateArgument(
+      type: map['type'] as String,
+      defaultValue: map['default'] as String?,
+    );
   }
 }
 

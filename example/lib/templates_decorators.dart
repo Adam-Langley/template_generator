@@ -1,3 +1,15 @@
-class ToJsonHashCodeTemplate { const ToJsonHashCodeTemplate(); }
-class DocsTemplate { const DocsTemplate(); }
-class FieldsTemplate { const FieldsTemplate(); }
+class ToJsonHashCodeTemplate {
+  const ToJsonHashCodeTemplate();
+}
+
+class GenerateMarkdownDocs {
+  const GenerateMarkdownDocs({
+    this.tags = const [],
+  });
+
+  final List<String> tags;
+}
+
+class FieldsTemplate {
+  const FieldsTemplate();
+}

@@ -269,6 +269,8 @@ extension ModelMutableExt on Model {
 const markdownDocsOtherModel = '''
 # OtherModel
 
+- tag1
+- model
 
 ## Constructors
 The constructors for OtherModel

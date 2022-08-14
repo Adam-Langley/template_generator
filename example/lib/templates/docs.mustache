@@ -1,6 +1,17 @@
+{{!
+name: "GenerateMarkdownDocs"
+parameters:
+  tags:
+    type: "List<String>"
+    default: "const []"
+}}
+
 const markdownDocs{{name}} = '''
 # {{name}}
 {{docs.cleanComment}}
+{{#tags}}
+- {{.}}
+{{/tags}}
 
 ## Constructors
 The constructors for {{name}}

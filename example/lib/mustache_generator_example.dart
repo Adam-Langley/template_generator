@@ -1,7 +1,7 @@
 import 'templates_decorators.dart';
 
 /// The model
-@DocsTemplate()
+@GenerateMarkdownDocs()
 @FieldsTemplate()
 class Model {
   final String? name;
@@ -23,7 +23,7 @@ class Model {
   });
 }
 
-@DocsTemplate()
+@GenerateMarkdownDocs(tags: ['tag1', 'model'])
 class OtherModel {
   /// Documentation for [t]
   int? t;
