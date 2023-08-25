@@ -21,14 +21,14 @@ class MustacheLibGenerator implements Builder {
   @override
   Map<String, List<String>> get buildExtensions {
     return {
-      r'$lib/gen$': ['templates_output.dart', 'templates_decorators.dart'],
+      r'$lib$': ['templates_output.dart', 'templates_decorators.dart'],
     };
   }
 
   static AssetId _allFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
-      'lib${Platform.pathSeparator}gen${Platform.pathSeparator}templates_output.dart',
+      'lib${Platform.pathSeparator}templates_output.dart',
     );
   }
 
