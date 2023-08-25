@@ -57,7 +57,7 @@ class MustacheLibGenerator implements Builder {
     await buildStep.writeAsString(
       AssetId(
         buildStep.inputId.package,
-        'lib${Platform.pathSeparator}templates_decorators.dart',
+        'lib${Platform.pathSeparator}gen${Platform.pathSeparator}templates_decorators.dart',
       ),
       DartFormatter().format('''
 ${templates.values.map((e) {
