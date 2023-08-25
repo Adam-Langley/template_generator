@@ -21,7 +21,7 @@ class MustacheLibGenerator implements Builder {
   @override
   Map<String, List<String>> get buildExtensions {
     return {
-      '\$lib${Platform.pathSeparator}gen${Platform.pathSeparator}\$': ['templates_output.dart', 'templates_decorators.dart'],
+      r'$lib/gen$': ['templates_output.dart', 'templates_decorators.dart'],
     };
   }
 
