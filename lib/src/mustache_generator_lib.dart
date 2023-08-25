@@ -18,12 +18,12 @@ class MustacheLibGenerator implements Builder {
 
   MustacheLibGenerator(this.options);
 
-  @override
-  Map<String, List<String>> get buildExtensions {
-    return const {
-      r'$lib$': ['templates_output.dart', 'templates_decorators.dart'],
-    };
-  }
+  // @override
+  // Map<String, List<String>> get buildExtensions {
+  //   return const {
+  //     r'$lib$': ['templates_output.dart', 'templates_decorators.dart'],
+  //   };
+  // }
 
   static AssetId _allFileOutput(BuildStep buildStep) {
     return AssetId(
@@ -57,7 +57,7 @@ class MustacheLibGenerator implements Builder {
     await buildStep.writeAsString(
       AssetId(
         buildStep.inputId.package,
-        'lib${Platform.pathSeparator}templates_decorators.dart',
+        'lib${Platform.pathSeparator}gen${Platform.pathSeparator}templates_decorators.dart',
       ),
       DartFormatter().format('''
 ${templates.values.map((e) {
