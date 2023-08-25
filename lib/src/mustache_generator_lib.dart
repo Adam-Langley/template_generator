@@ -28,7 +28,7 @@ class MustacheLibGenerator implements Builder {
   static AssetId _allFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
-      'lib${Platform.pathSeparator}templates_output.dart',
+      'gen${Platform.pathSeparator}templates_output.dart',
     );
   }
 
